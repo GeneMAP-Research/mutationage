@@ -13,6 +13,8 @@ workflow {
 	inputFile = getAgeEstimateInputFile()
 	mutationAge = getVariantAgeEstimate( inputFile )
 
+	log.info ""
+
 }
 
 workflow.onComplete { println "Done estimating ${params.variantId} age...!\n" }

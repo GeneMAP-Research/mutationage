@@ -158,7 +158,6 @@ process getTransposedHaplotypes() {
 }
 
 process getHaplotypeFrequencies() {
-	echo true
 	input:
 		path transposedHaplotypes
 	output:
@@ -185,6 +184,7 @@ process reformatHaplotypeFreqFiles() {
 }
 
 process getDmleInputFiles() {
+	echo true
 	input:
 		path affected
 		path unaffected
