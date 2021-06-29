@@ -26,7 +26,7 @@ def getUnaffectedReformattedHapFreqs() {
 }
 
 def getAgeEstimateInputFile() {
-	return channel.fromPath( params.outputDir + params.variantName + '*.params' )
+	return channel.fromFilePairs( params.outputDir + params.variantName + "*.params" , size: 1)
 }
 
 
@@ -36,7 +36,6 @@ process getVariantIdAndPositions() {
 	input:
 		path vcfFile
 	output:
-		publishDir path: "${params.outputDir}"
 		path "${params.variantName}-rsid-chr-pos.txt"
 	script:
 		"""
@@ -49,10 +48,10 @@ process getVariantIdAndPositions() {
 }
 
 process getVariantIdFile() {
+	tag "Variant ID supplied: ${variantId}"
 	input:
 		val variantId
 	output:
-		publishDir path: "${params.outputDir}"
 		path "${params.variantName}.rsid"
 	script:
 		"""
@@ -71,9 +70,9 @@ process getTagVariants() {
 	script:
 		"""
 		halfInterval=\$(( ${params.mutationRegionSize}/2 ))
-		echo \$halfInterval
+
 		mutposition=\$(grep -w -f ${variantIdFile} ${rsidChrPosFile} | awk '{print \$2}' | cut -f2 -d':')
-		echo \$mutposition
+
 		if [ \$mutposition -le \$halfInterval ]; then
 			downstream=\$(( \$mutposition - 500000 ))
 			upstream=\$(( \$mutposition + 500000 ))
@@ -102,7 +101,6 @@ process getListOfPositionsFromTagVariants() {
 	input:
 		tuple path(rsidChrPosFile), path(tagVariantsFile), path(tagVariantslist)
 	output:
-		publishDir path: "${params.outputDir}"
 		path "${params.variantName}-snps.list"
 	script:
 		"""
@@ -115,14 +113,18 @@ process getListOfPositionsFromTagVariants() {
 }
 
 process getHaplotypes() {
+	tag "${sampleIds}"
 	input:
 		tuple path(sampleIds), path(tagVariantPositionsFile), path(vcfFile)
 	output:
-		publishDir path: "${params.outputDir}"
 		path "*.haps"
 	script:
 		"""
-		bcftools index --threads ${task.cpus} -ft ${vcfFile}
+		bcftools \
+			index \
+			--threads ${task.cpus} \
+			-ft \
+			${vcfFile}
 
 		bcftools \
 			view \
@@ -147,10 +149,10 @@ process getHaplotypes() {
 }
 
 process getTransposedHaplotypes() {
+	tag "${haplotypeFiles}"
 	input:
 		path haplotypeFiles
 	output:
-		publishDir path: "${params.outputDir}"
 		path "${haplotypeFiles.baseName}.haps.transposed"
 	script:
 		template 'gethaps.r'
@@ -158,22 +160,25 @@ process getTransposedHaplotypes() {
 }
 
 process getHaplotypeFrequencies() {
+	tag "${transposedHaplotypes}"
 	input:
 		path transposedHaplotypes
 	output:
-		publishDir path: "${params.outputDir}"
 		path "*.freq"
 	script:
 
 		freq_out = transposedHaplotypes.baseName
 	
 		"""
-		sort ${transposedHaplotypes} | uniq -c | sort -gr -k1 > "${freq_out}.freq"
+		sort ${transposedHaplotypes} | \
+			uniq -c | \
+			sort -gr -k1 > "${freq_out}.freq"
 		"""
 
 }
 
 process reformatHaplotypeFreqFiles() {
+	tag "${haplotypeFrequencies}"
 	input:
 		path haplotypeFrequencies
 	output:
@@ -189,24 +194,26 @@ process getDmleInputFiles() {
 		path affected
 		path unaffected
 	output:
-		publishDir path: "${params.outputDir}", mode: 'copy'
-		path "${params.variantName}-ageEstimate.params"
+		publishDir path: "${params.outputDir}"
+		path "${params.variantName}-ageEstimate.*.params"
 	script:
 		template 'make_input_params.sh'
 }
 
 process getVariantAgeEstimate() {
+	tag "${inputFile}"
 	input:
-		path inputFile
+		tuple val(unused_grp_key), path(inputFile), val(unused_chain_number)
 	output:
 		publishDir path: "${params.outputDir}", mode: 'copy'
-		path "${inputFile}.{mat,hap,tre,sig,hpf,dat,output*}"
+		path "${inputFile}.{mat,hap,tre,sig,hpf,dat,log,output*}"
 	script:
 		"""
 		DMLE+2.2 ${inputFile}
 
 		if [ \$? -eq 0  ]; then
-			cut -f1,2,4 "${inputFile}.dat" -d' ' | sed '1 i ITER MUTLOC MUTAGE' > "${inputFile}.output"
+			cut -f1,2,4 "${inputFile}.dat" -d' ' | \
+				sed '1 i ITER MUTLOC MUTAGE' > "${inputFile}.output"
 		fi
 		
 		awk '{print \$1,\$2,\$11,\$20,\$29,\$38,\$47,\$56,\$65,\$74,\$83}' "${inputFile}.dat" > "${inputFile}.output.mutloc"
