@@ -33,6 +33,7 @@ def getAgeEstimateInputFile() {
 
 
 process getVariantIdAndPositions() {
+	tag "Variant ID supplied: ${params.variantId}"
 	input:
 		path vcfFile
 	output:
@@ -66,7 +67,7 @@ process getTagVariants() {
 		path rsidChrPosFile
 	output:
 		publishDir path: "${params.outputDir}", mode: 'copy'
-		path("${params.variantName}.{tags,tags.list}")
+		path("${params.variantName}.{tags,tags.list,ld}")
 	script:
 		"""
 		halfInterval=\$(( ${params.mutationRegionSize}/2 ))
@@ -90,6 +91,9 @@ process getTagVariants() {
 			--tag-r2 ${params.leastLDbetweenTags} \
 			--tag-kb 2000 \
 			--list-all \
+			--r2 \
+			--ld-snp ${params.variantId} \
+			--ld-window-r2 ${params.leastLDbetweenTags} \
 			--threads ${task.cpus} \
 			--double-id \
 			--keep-allele-order \
@@ -99,7 +103,7 @@ process getTagVariants() {
 
 process getListOfPositionsFromTagVariants() {
 	input:
-		tuple path(rsidChrPosFile), path(tagVariantsFile), path(tagVariantslist)
+		tuple path(rsidChrPosFile), path(ld_file), path(tagVariantsFile), path(tagVariantslist)
 	output:
 		path "${params.variantName}-snps.list"
 	script:
