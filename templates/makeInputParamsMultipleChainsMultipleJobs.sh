@@ -3,7 +3,7 @@
 
 diseaseHaps=\$(awk '{sum += \$1} END {print sum}' "${affected}")
 nhaps=\$(( \$diseaseHaps - 1 ))
-echo "\\nThere are \$nhaps haplotypes in "${affected}""
+echo "\nThere are \$nhaps haplotypes in "${affected}""
 
 number_of_chrom=\${nhaps}
 number_of_loci=\$( head -1 ${affected} | cut -f2- -d' ' | tr ' ' '\\n' | wc -l)
@@ -13,7 +13,6 @@ burn_iterations=${params.burnIterations}
 main_iterations=${params.mainIterations}
 nchains=${params.numberOfSimultaneousRuns}
 
-for i in \$(seq 1 \$nchains); do
 
 echo """Data as genotypes? Yes = 1, No = 0
 0
@@ -27,19 +26,19 @@ Use fixed random seed?:(0 = no (=random), negative integer = yes (=fixed), and i
 \${number_of_chrom}
 # loci per chromosome (L):
 \${number_of_loci}
-Numbers of haplotypes in the normal(base) pop.:""" > "${params.variantName}-ageEstimate.\${i}.params"
+Numbers of haplotypes in the normal(base) pop.:""" > "${params.variantName}-ageEstimate.params"
 
 
 
-sed '\$d' ${unaffected} >> "${params.variantName}-ageEstimate.\${i}.params"
+sed '\$d' ${unaffected} >> "${params.variantName}-ageEstimate.params"
 
 
 
-echo "Map distances:" >> "${params.variantName}-ageEstimate.\${i}.params"
+echo "Map distances:" >> "${params.variantName}-ageEstimate.params"
 
 
 
-tail -1 ${affected} | cut -f2- -d' ' >> "${params.variantName}-ageEstimate.\${i}.params"
+tail -1 ${affected} | cut -f2- -d' ' >> "${params.variantName}-ageEstimate.params"
 
 
 
@@ -50,7 +49,7 @@ Mutation location (only used for simulated data):
 Mutation's low and high boundaries
 0 1
 # simultaneous runs:
-\$(( \${nchains}/\$nchains ))
+\$nchains
 Starting value(s) for recdist. for each simul. run (-99 for random):
 -99
 Population growth rate:
@@ -81,13 +80,13 @@ Star genealogy (0=no, 1=yes):
 0
 Loci for the root  (1xL) (-99):
 \$( for i in \$(seq 1 \${number_of_loci}); do echo 1; done | tr '\\n' ' ' | sed 's/ \$/\\n/g' )
-Frequency, and loci for the tip chromosomes (?x(L+1)):""" >> "${params.variantName}-ageEstimate.\${i}.params"
+Frequency, and loci for the tip chromosomes (?x(L+1)):""" >> "${params.variantName}-ageEstimate.params"
 
 
 
 
 
-sed '\$d' ${affected} >> "${params.variantName}-ageEstimate.\${i}.params"
+sed '\$d' ${affected} >> "${params.variantName}-ageEstimate.params"
 
 
 
@@ -102,6 +101,4 @@ ncbi.txt
 301700
 303234
 311111
-312456""" >> "${params.variantName}-ageEstimate.\${i}.params"
-
-done
+312456""" >> "${params.variantName}-ageEstimate.params"
