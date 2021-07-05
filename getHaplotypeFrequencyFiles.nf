@@ -55,4 +55,4 @@ workflow {
 
 }
 
-workflow.onComplete { println "Haplotype frequencies gotten successfully!\n" }
+workflow.onComplete { println "\nHaplotype frequencies written to '${params.outputDir}' successfully!\n" }
