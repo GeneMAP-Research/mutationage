@@ -5,6 +5,8 @@ nextflow.enable.dsl = 2
 include {
 	getAgeEstimateInputFile;
 	getVariantAgeEstimate;
+	collectAgeEstimateChains;
+	collectLocationEstimateChains;
 } from "${projectDir}/modules/mutationAgeEstimate.nf"
 
 workflow {
@@ -28,6 +30,9 @@ workflow {
 
 
 	mutationAge = getVariantAgeEstimate( age_estimate_input )
+
+	collectAgeEstimateChains(mutationAge)
+	collectLocationEstimateChains(mutationAge)
 
 	log.info "This is a test log info"
 

@@ -39,8 +39,8 @@ workflow {
 	affectedSampleIds = getAffectedSamples()
 	unaffectedSampleIds = getUnaffectedSamples()
 
-	/*  mix sample channels because order does not. But the mixed channel combine with
-		tag_vcf channel since order matters when tag_vcf channels are involved */
+	//  mix sample channels because order does not. But the mixed channel combine with
+	//	tag_vcf channel since order matters when tag_vcf channels are involved
 
 	affectedSampleIds
 		.mix(unaffectedSampleIds)
@@ -52,7 +52,6 @@ workflow {
 	haplotypeFrequencies = getHaplotypeFrequencies( transposedHaplotypes )
 
 	reformattedHapFreqFiles = reformatHaplotypeFreqFiles( haplotypeFrequencies )
-
 }
 
 workflow.onComplete { println "\nHaplotype frequencies written to '${params.outputDir}' successfully!\n" }
