@@ -63,10 +63,12 @@ getJointAgeEstimate <- function()
     
         colnames(ageEstimate) <- ageEstimate_col
        
-        jointAgeEstimate <- join(jointAgeEstimate, 
-    			      ageEstimate,
-                      type = "inner", 
-    			      by="ITER")
+        jointAgeEstimate <- join(
+            jointAgeEstimate, 
+            ageEstimate, 
+            type = "inner", 
+            by="ITER"
+        )
     }
 
     return(jointAgeEstimate)

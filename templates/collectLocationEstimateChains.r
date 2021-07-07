@@ -63,10 +63,12 @@ getJointlocationEstimate <- function()
     
         colnames(locationEstimate) <- locationEstimate_col
        
-        jointlocationEstimate <- join(jointlocationEstimate, 
-                      locationEstimate,
-                      type = "inner", 
-                      by="ITER")
+        jointlocationEstimate <- join(
+            jointlocationEstimate, 
+            locationEstimate, 
+            type = "inner", 
+            by="ITER"
+        )
     }
 
     return(jointlocationEstimate)
