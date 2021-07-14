@@ -42,19 +42,30 @@ combineHapFiles <- function(files, hap)
 
 saveMergedHapFile <- function(hap)
 {
-    write.csv(hap, "${params.outPrefix}-hap-matrix.csv",  na="0", row.names=F, quote=F)
+    write.csv(hap, 
+        "${params.outPrefix}-hap-matrix.csv",  
+        na="0", 
+        row.names=F, 
+        quote=F)
 }
 
 transposeMergedHapFile <- function() 
 {
     mergedHap <- read.csv2("${params.outPrefix}-hap-matrix.csv", h=T, sep=",", quote="")
     mergedHap_rownames <- c()
-    for (row in 1:nrow(mergedHap)) { mergedHap_rownames[row] <- paste0("Hap",row) }
+    for (row in 1:nrow(mergedHap)) 
+    { 
+        mergedHap_rownames[row] <- paste0("Hap",row) 
+    }
     rownames(mergedHap) <- mergedHap_rownames
     hap_ids <- mergedHap\$Hap
     mergedHap\$Hap <- NULL
     transposedHap <- t(mergedHap)
-    write.csv(transposedHap, "${params.outPrefix}-transpoded-hap-matrix.csv", na="0", row.names=T, quote=F)
+    write.csv(transposedHap, 
+        "${params.outPrefix}-transpoded-hap-matrix.csv", 
+        na="0", 
+        row.names=T, 
+        quote=F)
 }
 
 getPlotInput <- function()
