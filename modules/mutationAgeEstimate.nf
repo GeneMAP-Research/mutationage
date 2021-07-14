@@ -6,7 +6,7 @@ nextflow.enable.dsl = 2
 
 
 def getInputVcf() {
-	return channel.fromPath( params.inputDir + params.vcfFile )
+	return channel.fromPath( params.inputDir + params.vcf )
 }
 
 def getAffectedSamples() {
@@ -23,6 +23,7 @@ def getAffectedReformattedHapFreqs() {
 
 def getUnaffectedReformattedHapFreqs() {
 	return channel.fromPath( params.outputDir + '/*.unaffected.haps.reform.freq' )
+				  .ifEmpty { error "Frequency files are empty! Please check and run the workflow again..." }
 }
 
 def getAgeEstimateInputFile() {
@@ -33,7 +34,7 @@ def getAgeEstimateInputFile() {
 
 
 process getVariantIdAndPositions() {
-	tag "Variant ID supplied: ${params.variantId}"
+	tag "VCF file supplied: ${vcfFile}"
 	input:
 		path vcfFile
 	output:
@@ -67,7 +68,7 @@ process getTagVariants() {
 		path rsidChrPosFile
 	output:
 		publishDir path: "${params.outputDir}", mode: 'copy'
-		path("${params.variantName}.{tags,tags.list,ld}")
+		path("${params.variantName}.{ld,tags}")
 	script:
 		"""
 		halfInterval=\$(( ${params.mutationRegionSize}/2 ))
@@ -82,15 +83,13 @@ process getTagVariants() {
 			upstream=\$(( \$mutposition + \$halfInterval ))
 		fi
 
+		tagkb=\$(( (\$upstream - \$downstream)/1000 ))
+
 		plink \
 			--vcf ${vcfFile} \
 			--chr ${params.chromosomeNumber} \
 			--from-bp \${downstream} \
 			--to-bp \${upstream} \
-			--show-tags ${variantIdFile} \
-			--tag-r2 ${params.leastLDbetweenTags} \
-			--tag-kb 2000 \
-			--list-all \
 			--r2 \
 			--ld-snp ${params.variantId} \
 			--ld-window-r2 ${params.leastLDbetweenTags} \
@@ -98,18 +97,32 @@ process getTagVariants() {
 			--double-id \
 			--keep-allele-order \
 			--out ${params.variantName}
+
+		sed '1d' ${params.variantName}.ld | awk '{print \$6}' > ${params.variantName}.tags
 		"""
 }
 
 process getListOfPositionsFromTagVariants() {
 	input:
-		tuple path(rsidChrPosFile), path(ld_file), path(tagVariantsFile), path(tagVariantslist)
+		tuple path(rsidChrPosFile), path(ld_file), path(tagVariantsFile)
 	output:
+		publishDir path: "${params.outputDir}", mode: 'copy'
 		path "${params.variantName}-snps.list"
 	script:
 		"""
+		numberOfTags="\$(wc -l ${tagVariantsFile} | awk '{print \$1}')"
+
+		if [ "\$numberOfTags" -gt 25 ]; then
+			echo ${params.variantId} > tags.txt
+			grep -wv "${params.variantId}" ${tagVariantsFile} | \
+				shuf -n 24 >> tags.txt
+			tags="tags.txt"
+		else
+			tags="${tagVariantsFile}"
+		fi
+
 		grep \
-			-f ${tagVariantsFile} ${rsidChrPosFile} | \
+			-f \${tags} ${rsidChrPosFile} | \
 			awk '{print \$2}' | \
 			tr '\\n' ',' | \
 			sed 's/,\$/\\n/g' > "${params.variantName}-snps.list"
@@ -132,6 +145,7 @@ process getHaplotypes() {
 
 		bcftools \
 			view \
+			--force-samples \
 			-v snps \
 			--threads ${task.cpus} \
 			-k \
@@ -143,7 +157,7 @@ process getHaplotypes() {
 		bcftools \
 			query \
 			-H \
-			-f '%POS[ %GT]\n' | \
+			-f '%POS[ %GT]\\n' | \
 		sed 's/1|1/2 2/g' | \
 		sed 's/1|0/2 1/g' | \
 		sed 's/0|1/1 2/g' | \
@@ -159,7 +173,7 @@ process getTransposedHaplotypes() {
 	output:
 		path "${haplotypeFiles.baseName}.haps.transposed"
 	script:
-		template 'gethaps.r'
+		template 'getHapsForMutationAge.r'
 
 }
 
@@ -189,7 +203,7 @@ process reformatHaplotypeFreqFiles() {
 		publishDir path: "${params.outputDir}", mode: 'copy'
 		path "*.reform.freq"
 	script:
-		template 'fix_freq_files.r'
+		template 'fixFreqFiles.r'
 }
 
 process getDmleInputFiles() {
@@ -199,9 +213,9 @@ process getDmleInputFiles() {
 		path unaffected
 	output:
 		publishDir path: "${params.outputDir}"
-		path "${params.variantName}-ageEstimate.*.params"
+		path "${params.variantName}-ageEstimate*.params"
 	script:
-		template 'make_input_params.sh'
+		template 'makeInputParamsSingleChainMultipleJobs.sh'
 }
 
 process getVariantAgeEstimate() {
@@ -210,7 +224,16 @@ process getVariantAgeEstimate() {
 		tuple val(unused_grp_key), path(inputFile), val(unused_chain_number)
 	output:
 		publishDir path: "${params.outputDir}", mode: 'copy'
-		path "${inputFile}.{mat,hap,tre,sig,hpf,dat,log,output*}"
+		tuple 	path("${inputFile}.output.mutage"), \
+				path("${inputFile}.output.mutloc"), \
+				path("${inputFile}.mat"), \
+				path("${inputFile}.hap"), \
+				path("${inputFile}.tre"), \
+				path("${inputFile}.sig"), \
+				path("${inputFile}.hpf"), \
+				path("${inputFile}.dat"), \
+				path("${inputFile}.log"), \
+				path("${inputFile}.output")
 	script:
 		"""
 		DMLE+2.2 ${inputFile}
@@ -223,4 +246,28 @@ process getVariantAgeEstimate() {
 		awk '{print \$1,\$2,\$11,\$20,\$29,\$38,\$47,\$56,\$65,\$74,\$83}' "${inputFile}.dat" > "${inputFile}.output.mutloc"
 		awk '{print \$1,\$4,\$13,\$22,\$31,\$40,\$49,\$58,\$67,\$76,\$85}' "${inputFile}.dat" > "${inputFile}.output.mutage"
 		"""
+}
+
+process collectAgeEstimateChains() {
+	echo true
+	input:
+		path mutationAge
+	output:
+		publishDir path: "${params.outputDir}", mode: 'copy'
+		path "*.txt"
+	script:
+		mutAge = mutationAge[0]
+		template "collectAgeEstimateChains.r"
+}
+
+process collectLocationEstimateChains() {
+	echo true
+	input:
+		path mutationLoc
+	output:
+		publishDir path: "${params.outputDir}", mode: 'copy'
+		path "*.txt"
+	script:
+		mutLoc = mutationLoc[1]
+		template "collectLocationEstimateChains.r"
 }
