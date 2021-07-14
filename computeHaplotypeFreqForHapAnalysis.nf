@@ -115,7 +115,12 @@ process collectHapIds() {
 			if [ \${hapFile##*.} == "txt" ]; then
 				cat \${hapFile}
 			fi
-		done | sort | uniq > ${params.outPrefix}.haps.ids
+		done | \
+			sort | \
+				uniq | \
+					awk '{print "\\""\$1"\\""}' | \
+						sed '1 i Hap' > \
+						${params.outPrefix}.haps.ids
 		"""
 }
 
