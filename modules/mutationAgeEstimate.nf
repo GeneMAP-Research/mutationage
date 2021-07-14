@@ -6,7 +6,7 @@ nextflow.enable.dsl = 2
 
 
 def getInputVcf() {
-	return channel.fromPath( params.inputDir + params.vcfFile )
+	return channel.fromPath( params.inputDir + params.vcf )
 }
 
 def getAffectedSamples() {
@@ -173,7 +173,7 @@ process getTransposedHaplotypes() {
 	output:
 		path "${haplotypeFiles.baseName}.haps.transposed"
 	script:
-		template 'gethaps.r'
+		template 'getHapsForMutationAge.r'
 
 }
 
@@ -203,7 +203,7 @@ process reformatHaplotypeFreqFiles() {
 		publishDir path: "${params.outputDir}", mode: 'copy'
 		path "*.reform.freq"
 	script:
-		template 'fix_freq_files.r'
+		template 'fixFreqFiles.r'
 }
 
 process getDmleInputFiles() {
