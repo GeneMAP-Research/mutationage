@@ -8,7 +8,7 @@ f <- read.csv2(
 				"${hapCount}",
 				h=T,
 				quote="",
-				sep=" ")
+				sep="")
 
 n <- ncol(f)
 f\$Hap <- f[,n]

@@ -8,7 +8,7 @@ getPackages <- function()
 
 getInputFiles <- function() 
 {
-    files <- Sys.glob("${params.outputDir}/*.freq")
+    files <- Sys.glob("${params.outputDir}/*.haps.freq")
     hap <- read.csv2("${hapIds}", h=T, quote="")
 
     getInputFiles_output <- list()

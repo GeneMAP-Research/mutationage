@@ -75,14 +75,18 @@ process pasteHapFiles() {
 		tuple path("${popName}.haps"), path("${popName}.haps.txt")
 	script:
 		"""
-		paste ${tsvFile} ${txtFile} > ${popName}.haps
+		head -1 ${txtFile} > "${popName}.temp.hap.transposed.txt"
+		awk '{print "\\""\$0"\\""}' ${txtFile} | sed '1d' >> "${popName}.temp.hap.transposed.txt"
+		paste ${tsvFile} "${popName}.temp.hap.transposed.txt" > ${popName}.haps
     	sed '1,2d' ${popName}.haps | \
-	    	cut -f5 | \
-	    		sort | \
-	    			uniq > ${popName}.haps.txt
+    		rev | \
+	    		cut -f1 | \
+	    			rev | \
+	    				sort | \
+	    					uniq > ${popName}.haps.txt
 		"""
 }
-
+//| awk '{print "\\""\$0"\\""}'
 
 process collectHapIds() {
 	input:
@@ -99,11 +103,11 @@ process collectHapIds() {
 		done | \
 			sort | \
 				uniq | \
-					awk '{print "\\""\$1"\\""}' | \
 						sed '1 i Hap' > \
 						${params.outPrefix}.haps.ids
 		"""
 }
+//					#awk '{print "\\""\$1"\\""}' | \
 
 process getHaplotypeCounts() {
 	tag "processing ${popName}"
@@ -127,9 +131,12 @@ process getHaplotypeCounts() {
 	    			${popName}.haps.frq
     
     	sed '2d' ${popName}.haps.frq | \
-	    	awk '{print \$1,\$2,\$3,\$4,\$5,"\\""\$6"\\""}' > ${popName}.haps.count
+    		awk '{print \$0}' > ${popName}.haps.count
 		"""
 }
+
+// 	    	#awk '{print \$1,\$2,\$3,\$4,\$5,"\\""\$6"\\""}' > ${popName}.haps.count
+
 
 process getHaplotypeFreqsFromHapCounts() {
 	tag "processing ${popName}"
