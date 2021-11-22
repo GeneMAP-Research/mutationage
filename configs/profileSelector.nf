@@ -31,10 +31,10 @@ profiles {
 			maxRetries = 3
 			clusterOptions = '-P CBBI1243 -l select=1 -m b'
 			cpus = 24
-			time = 1.h
+			time = 90.m
 
 			withLabel:ageEstimate {
-				time = 1.h
+				time = 90.m
 				cpus = 24
 				memory = 3.GB
 			}
@@ -49,6 +49,9 @@ profiles {
 				container = "${params.containersDir}dmle_latest.sif"
 			}
 
+                        withLabel:rcran {
+                                container = "${params.containersDir}R.sif"
+                        }
 		}
 
 	}

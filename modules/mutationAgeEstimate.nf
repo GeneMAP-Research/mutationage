@@ -85,8 +85,13 @@ process getTagVariants() {
 
 		tagkb=\$(( (\$upstream - \$downstream)/1000 ))
 
+		plink --vcf ${vcfFile} --make-bed --keep-allele-order --double-id --chr ${params.chromosomeNumber} --biallelic-only --out temp
+
+		awk '{print \$1,\$1":"\$4,\$3,\$4,\$5,\$6}' temp.bim > temp2.bim
+		mv temp2.bim temp.bim
+
 		plink \
-			--vcf ${vcfFile} \
+			--bfile temp \
 			--chr ${params.chromosomeNumber} \
 			--from-bp \${downstream} \
 			--to-bp \${upstream} \
@@ -215,11 +220,14 @@ process getDmleInputFiles() {
 		publishDir path: "${params.outputDir}"
 		path "${params.variantName}-ageEstimate*.params"
 	script:
-		template 'makeInputParamsSingleChainMultipleJobs.sh'
+		template 'makeInputParamsMultipleChainsMultipleJobs.sh'
 }
 
 process getVariantAgeEstimate() {
 	tag "${inputFile}"
+        label 'ageEstimate'
+        label 'dmle'
+        //label 'rcran'
 	input:
 		tuple val(unused_grp_key), path(inputFile), val(unused_chain_number)
 	output:
