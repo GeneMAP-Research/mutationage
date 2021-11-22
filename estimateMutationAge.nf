@@ -34,7 +34,7 @@ workflow {
 	collectAgeEstimateChains(mutationAge)
 	collectLocationEstimateChains(mutationAge)
 
-	log.info "This is a test log info"
+	//log.info "This is a test log info"
 
 }
 

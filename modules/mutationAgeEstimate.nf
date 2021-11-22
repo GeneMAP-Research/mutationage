@@ -67,7 +67,7 @@ process getTagVariants() {
 		path variantIdFile
 		path rsidChrPosFile
 	output:
-		publishDir path: "${params.outputDir}", mode: 'copy'
+		publishDir path: "${params.outputDir}/${params.variantName}/", mode: 'copy'
 		path("${params.variantName}.{ld,tags}")
 	script:
 		"""
@@ -85,9 +85,17 @@ process getTagVariants() {
 
 		tagkb=\$(( (\$upstream - \$downstream)/1000 ))
 
-		plink --vcf ${vcfFile} --make-bed --keep-allele-order --double-id --chr ${params.chromosomeNumber} --biallelic-only --out temp
+		plink \
+			--vcf ${vcfFile} \
+			--make-bed \
+			--keep-allele-order \
+			--double-id \
+			--chr ${params.chromosomeNumber} \
+			--biallelic-only \
+			--out temp
 
 		awk '{print \$1,\$1":"\$4,\$3,\$4,\$5,\$6}' temp.bim > temp2.bim
+
 		mv temp2.bim temp.bim
 
 		plink \

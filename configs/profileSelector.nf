@@ -3,7 +3,7 @@ profiles {
 		executor {
 			name = 'local'
 			cpus = 6
-			queuesize = 10
+			//queuesize = 10
 		}
 	}
 

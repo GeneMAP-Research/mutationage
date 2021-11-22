@@ -38,7 +38,7 @@ getJointAgeEstimate <- function()
         print(
             paste0(
                 "Reading file: ", 
-                "${params.outputDir}${params.variantName}-ageEstimate.", 
+                "${params.outputDir}/${params.variantName}/${params.variantName}-ageEstimate.", 
                 run_estimate, 
                 ".params.output.mutage", 
                 " ..."
@@ -48,7 +48,7 @@ getJointAgeEstimate <- function()
         
         ageEstimate <- read.table(
             paste0(
-                "${params.outputDir}${params.variantName}-ageEstimate.", 
+                "${params.outputDir}/${params.variantName}/${params.variantName}-ageEstimate.", 
                 run_estimate, 
                 ".params.output.mutage")
             )
