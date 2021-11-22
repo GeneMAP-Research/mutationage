@@ -18,16 +18,16 @@ def getUnaffectedSamples() {
 }
 
 def getAffectedReformattedHapFreqs() {
-	return channel.fromPath( params.outputDir + '/*.affected.haps.reform.freq' )
+	return channel.fromPath( params.outputDir + params.variantName + "/hapfreqs/*.affected.haps.reform.freq" )
 }
 
 def getUnaffectedReformattedHapFreqs() {
-	return channel.fromPath( params.outputDir + '/*.unaffected.haps.reform.freq' )
+	return channel.fromPath( params.outputDir + params.variantName + "/hapfreqs/*.unaffected.haps.reform.freq" )
 				  .ifEmpty { error "Frequency files are empty! Please check and run the workflow again..." }
 }
 
 def getAgeEstimateInputFile() {
-	return channel.fromFilePairs( params.outputDir + params.variantName + "*.params" , size: 1)
+	return channel.fromFilePairs( params.outputDir + params.variantName + "/params/*.params" , size: 1)
 }
 
 
@@ -205,7 +205,7 @@ process reformatHaplotypeFreqFiles() {
 	input:
 		path haplotypeFrequencies
 	output:
-		publishDir path: "${params.outputDir}", mode: 'copy'
+		publishDir path: "${params.outputDir}/${params.variantName}/hapfreqs/", mode: 'copy'
 		path "*.reform.freq"
 	script:
 		template 'fixFreqFiles.r'
@@ -217,7 +217,7 @@ process getDmleInputFiles() {
 		path affected
 		path unaffected
 	output:
-		publishDir path: "${params.outputDir}"
+		publishDir path: "${params.outputDir}/${params.variantName}/params/"
 		path "${params.variantName}-ageEstimate*.params"
 	script:
 		template 'makeInputParamsMultipleChainsMultipleJobs.sh'
@@ -231,7 +231,7 @@ process getVariantAgeEstimate() {
 	input:
 		tuple val(unused_grp_key), path(inputFile), val(unused_chain_number)
 	output:
-		publishDir path: "${params.outputDir}", mode: 'copy'
+		publishDir path: "${params.outputDir}/${params.variantName}/", mode: 'copy'
 		tuple 	path("${inputFile}.output.mutage"), \
 				path("${inputFile}.output.mutloc"), \
 				path("${inputFile}.mat"), \
@@ -261,7 +261,7 @@ process collectAgeEstimateChains() {
 	input:
 		path mutationAge
 	output:
-		publishDir path: "${params.outputDir}", mode: 'copy'
+		publishDir path: "${params.outputDir}/${params.variantName}/", mode: 'copy'
 		path "*.txt"
 	script:
 		mutAge = mutationAge[0]
@@ -273,7 +273,7 @@ process collectLocationEstimateChains() {
 	input:
 		path mutationLoc
 	output:
-		publishDir path: "${params.outputDir}", mode: 'copy'
+		publishDir path: "${params.outputDir}/${params.variantName}/", mode: 'copy'
 		path "*.txt"
 	script:
 		mutLoc = mutationLoc[1]

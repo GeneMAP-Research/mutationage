@@ -26,7 +26,7 @@ getJointlocationEstimate <- function()
     iterations <- data.frame(
         seq(
             from=0, 
-            to=(${params.mainIterations} - 1), 
+            to=((${params.burnIterations} + ${params.mainIterations}) - 1), 
             by=1)
         )
 
