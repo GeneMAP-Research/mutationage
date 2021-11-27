@@ -228,7 +228,7 @@ process getDmleInputFiles() {
 		publishDir path: "${params.outputDir}/${params.variantName}/params/"
 		path "${params.variantName}-ageEstimate*.params"
 	script:
-		template 'makeInputParamsMultipleChainsMultipleJobs.sh'
+		template 'makeInputParamsMultipleChainsSingleJob.sh'
 }
 
 process getVariantAgeEstimate() {
