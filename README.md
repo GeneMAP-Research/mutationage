@@ -13,4 +13,4 @@ nextflow run createDmleInputFile.nf
 nextflow run estimateMutationAge.nf
 ```
 
-The results should be written to the output directory specified in the config file
+The results should be written to the output directory specified in the config file.
